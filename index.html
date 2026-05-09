@@ -1,74 +1,74 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>撒旦不入天堂</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>撒旦不入天堂</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 简单的内联样式确保隐藏逻辑生效 */
+        .hidden { display: none !important; }
+        #main-menu { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; position: relative; }
+        #menu-bg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:-1; object-fit: cover; }
+        #popup { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 100; display: flex; align-items: center; justify-content: center; }
+        #popup-box { background: #222; padding: 20px; border: 1px solid #555; position: relative; text-align: center; color: white; }
+        .btn-green { background-color: #28a745; color: white; }
+        .btn-red { background-color: #dc3545; color: white; }
+        #game { width: 100%; background-size: cover; background-position: center; position: relative; }
+    </style>
 </head>
 <body>
 
-<!-- =======================
-      主菜单（新增）
-======================= -->
+<!-- 主菜单 -->
 <div id="main-menu">
-    <img id="menu-bg" src="assets/menu_bg.jpg" alt="">
-    <img id="menu-title" src="assets/title.png" alt="title">
+    <img id="menu-bg" src="images/menu_background.jpg" alt="背景">
+    <img id="menu-title" src="images/game_logo.png" alt="标题图">
 
     <div id="menu-buttons">
         <button id="btn-start">开始</button>
-        <button id="btn-continue" class="hidden">继续故事</button> <!-- ★会自动显示 -->
         <button id="btn-restart" class="hidden">重新开始</button>
         <button id="btn-settings">设置</button>
     </div>
 </div>
 
-<!-- =======================
-      游戏界面（你的原内容）
-======================= -->
+<!-- 游戏界面 -->
 <div id="game" class="hidden">
-    <img id="character" src="" alt="character">
+    <img id="character" src="" alt="角色图片">
     <div id="textbox">
         <div id="text"></div>
         <div id="choices"></div>
     </div>
 
-    <!-- 游戏右上角菜单按钮（新增） -->
-    <div id="ingame-menu-btn">☰</div>
+    <!-- 右上角菜单按钮 -->
+    <div id="ingame-menu-btn" onclick="toggleInGameMenu()">☰</div>
 
-    <!-- 右上角菜单（新增） -->
+    <!-- 右上角下拉选项 -->
     <div id="ingame-menu" class="hidden">
-        <button id="save-progress">保存进度</button>
-        <button id="exit-game">退出</button>
+        <button id="btn-save-progress">保存进度</button>
+        <button id="btn-exit-game">退出</button>
     </div>
 </div>
 
-<!-- =======================
-      弹窗（保存/重置/退出）
-======================= -->
+<!-- 通用弹窗系统 -->
 <div id="popup" class="hidden">
     <div id="popup-box">
-        <div id="popup-text">弹窗内容</div>
-
-        <div id="popup-buttons">
-            <button id="popup-left">否</button>
-            <button id="popup-right">是</button>
+        <div id="popup-close" class="hidden" style="position:absolute; right:10px; top:10px; cursor:pointer;">✖</div>
+        <div id="popup-text">内容</div>
+        <div id="popup-buttons" style="margin-top: 20px;">
+            <button id="popup-left">左按钮</button>
+            <button id="popup-right">右按钮</button>
         </div>
-
-        <div id="popup-close">✖</div> <!-- 仅退出时显示 -->
     </div>
 </div>
 
 <script src="script.js"></script>
-
 <script>
-// ★ 修正手机高度（保留）
-function fixVH(){
-    document.getElementById("game").style.height = window.innerHeight + "px";
-}
-window.addEventListener("resize", fixVH);
-fixVH();
+    // 修正手机高度
+    function fixVH(){
+        document.getElementById("game").style.height = window.innerHeight + "px";
+    }
+    window.addEventListener("resize", fixVH);
+    fixVH();
 </script>
-
 </body>
 </html>
