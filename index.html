@@ -7,108 +7,123 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ========== 标题界面 ========== -->
+
+    <!-- ==================== 标题界面 ==================== -->
     <div id="title-screen" class="screen active">
-        <div class="title-bg"></div>
+        <div class="title-background">
+            <img src="/images/title-background.jpg" alt="标题背景" class="title-bg-img">
+        </div>
         <div class="title-content">
-            <img src="/images/title_logo.png" alt="撒旦不入天堂" class="title-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-            <h1 class="title-text-fallback" style="display:none;">撒旦不入天堂</h1>
-            <div class="title-buttons">
-                <button id="btn-start" class="title-btn btn-start">开始</button>
-                <button id="btn-restart" class="title-btn btn-restart" style="display:none;">重新开始</button>
-		<button id="btn-settings-title" class="title-btn btn-settings">设置</button>
-                
+            <div class="title-logo-wrapper">
+                <img src="/images/title-logo.png" alt="撒旦不入天堂" class="title-logo-img">
+            </div>
+            <div class="title-buttons" id="title-buttons">
+                <!-- 动态填充 -->
             </div>
         </div>
     </div>
 
-    <!-- ========== 游戏界面 ========== -->
+    <!-- ==================== 游戏界面 ==================== -->
     <div id="game-screen" class="screen">
-        <div class="game-bg" id="game-bg"></div>
-        <!-- 右上角菜单 -->
-        <div class="game-menu-wrapper" id="game-menu-wrapper">
-            <button id="btn-menu-toggle" class="btn-menu-toggle" aria-label="菜单">
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="white">
-                    <circle cx="12" cy="5" r="2"/>
-                    <circle cx="12" cy="12" r="2"/>
-                    <circle cx="12" cy="19" r="2"/>
-                </svg>
-            </button>
-            <div id="menu-dropdown" class="menu-dropdown" style="display:none;">
-                <button id="btn-save" class="menu-option">保存进度</button>
-                <button id="btn-exit" class="menu-option">退出</button>
-            </div>
+        <!-- 场景背景 -->
+        <div class="scene-background" id="scene-background">
+            <img src="" alt="场景背景" class="scene-bg-img" id="scene-bg-img">
         </div>
+
+        <!-- 全屏文字层（narration场景使用） -->
+        <div class="narration-overlay" id="narration-overlay">
+            <div class="narration-text" id="narration-text"></div>
+            <div class="narration-hint">点击继续</div>
+        </div>
+
+        <!-- 右上角菜单按钮 -->
+        <button class="game-menu-btn" id="game-menu-btn" aria-label="菜单">
+            <span class="menu-icon">☰</span>
+        </button>
+        <!-- 右上角下拉菜单 -->
+        <div class="game-dropdown" id="game-dropdown">
+            <button class="dropdown-item" id="dropdown-save">保存进度</button>
+            <button class="dropdown-item" id="dropdown-exit">退出</button>
+        </div>
+        <!-- 下拉菜单的轻量覆盖层 -->
+        <div class="dropdown-backdrop" id="dropdown-backdrop"></div>
+
         <!-- 对话框 -->
-        <div class="dialog-box" id="dialog-box">
-            <div class="speaker-tag" id="speaker-tag">旁白</div>
-            <div class="dialog-text" id="dialog-text"></div>
-            <div class="choices-container" id="choices-container"></div>
-            <div class="continue-hint" id="continue-hint">▼ 点击继续</div>
+        <div class="dialogue-box" id="dialogue-box">
+            <div class="dialogue-speaker" id="dialogue-speaker"></div>
+            <div class="dialogue-text" id="dialogue-text"></div>
+            <div class="dialogue-choices" id="dialogue-choices"></div>
+            <div class="dialogue-hint" id="dialogue-hint">点击继续</div>
         </div>
-        <!-- 点击继续的透明覆盖层（对话框上方） -->
-        <div class="dialog-click-area" id="dialog-click-area"></div>
     </div>
 
-    <!-- ========== 弹窗：重新开始确认 ========== -->
-    <div id="modal-restart" class="modal-overlay" style="display:none;">
-        <div class="modal-box">
-            <p class="modal-message">是否删除当前进度？<br>这个操作是无法反悔的，请慎重考虑。</p>
-            <div class="modal-buttons">
-                <button id="btn-restart-no" class="modal-btn btn-green">否</button>
-                <button id="btn-restart-yes" class="modal-btn btn-red">是</button>
+    <!-- ==================== 模态弹窗：重新开始确认 ==================== -->
+    <div class="modal-overlay" id="modal-restart-overlay">
+        <div class="modal-dialog" id="modal-restart-dialog">
+            <div class="modal-body">
+                <p class="modal-message">是否删除当前进度？<br>这个操作是无法反悔的，请慎重考虑。</p>
             </div>
-        </div>
-    </div>
-
-    <!-- ========== 弹窗：保存进度 ========== -->
-    <div id="modal-save" class="modal-overlay" style="display:none;">
-        <div class="modal-box">
-            <p class="modal-message">保存当前进度？</p>
-            <div class="modal-buttons">
-                <button id="btn-save-no" class="modal-btn btn-red">否</button>
-                <button id="btn-save-yes" class="modal-btn btn-green">是</button>
+            <div class="modal-buttons modal-buttons-dual">
+                <button class="modal-btn btn-green" id="modal-restart-no">否</button>
+                <button class="modal-btn btn-red" id="modal-restart-yes">是</button>
             </div>
         </div>
     </div>
 
-    <!-- ========== 弹窗：退出确认（未保存时） ========== -->
-    <div id="modal-exit" class="modal-overlay" style="display:none;">
-        <div class="modal-box modal-box-exit">
-            <button id="btn-exit-close" class="modal-close-x" aria-label="关闭">✕</button>
-            <p class="modal-message">保存当前进度？</p>
-            <div class="modal-buttons">
-                <button id="btn-exit-nosave" class="modal-btn btn-red">不保存并退出</button>
-                <button id="btn-exit-save" class="modal-btn btn-green">保存并退出</button>
+    <!-- ==================== 模态弹窗：保存确认 ==================== -->
+    <div class="modal-overlay" id="modal-save-overlay">
+        <div class="modal-dialog" id="modal-save-dialog">
+            <div class="modal-body">
+                <p class="modal-message">保存当前进度？</p>
+            </div>
+            <div class="modal-buttons modal-buttons-dual">
+                <button class="modal-btn btn-red" id="modal-save-no">否</button>
+                <button class="modal-btn btn-green" id="modal-save-yes">是</button>
             </div>
         </div>
     </div>
 
-    <!-- ========== 弹窗：设置 ========== -->
-    <div id="modal-settings" class="modal-overlay" style="display:none;">
-        <div class="modal-box modal-box-settings">
-            <button id="btn-settings-close" class="modal-close-x" aria-label="关闭">✕</button>
-            <h3 class="settings-title">设置</h3>
-            <div class="settings-item">
-                <label for="range-text-speed">文字速度</label>
-                <input type="range" id="range-text-speed" min="1" max="5" value="3" step="1">
-                <span class="range-labels"><span>快</span><span>慢</span></span>
+    <!-- ==================== 模态弹窗：退出确认（含X按钮） ==================== -->
+    <div class="modal-overlay" id="modal-exit-overlay">
+        <div class="modal-dialog" id="modal-exit-dialog">
+            <button class="modal-close-x" id="modal-exit-x" aria-label="关闭">✕</button>
+            <div class="modal-body">
+                <p class="modal-message">保存当前进度？</p>
             </div>
-            <div class="settings-item">
-                <label for="range-bgm">背景音乐音量</label>
-                <input type="range" id="range-bgm" min="0" max="100" value="70">
-                <span class="range-labels"><span>0</span><span>100</span></span>
-            </div>
-            <div class="settings-item">
-                <label for="range-sfx">音效音量</label>
-                <input type="range" id="range-sfx" min="0" max="100" value="80">
-                <span class="range-labels"><span>0</span><span>100</span></span>
+            <div class="modal-buttons modal-buttons-dual">
+                <button class="modal-btn btn-red" id="modal-exit-nosave">不保存并退出</button>
+                <button class="modal-btn btn-green" id="modal-exit-save">保存并退出</button>
             </div>
         </div>
     </div>
 
-    <!-- ========== 通用遮罩（用于某些场景） ========== -->
-    <div id="global-overlay" class="global-overlay" style="display:none;"></div>
+    <!-- ==================== 模态弹窗：设置 ==================== -->
+    <div class="modal-overlay" id="modal-settings-overlay">
+        <div class="modal-dialog modal-dialog-settings" id="modal-settings-dialog">
+            <button class="modal-close-x" id="modal-settings-x" aria-label="关闭">✕</button>
+            <div class="modal-body settings-body">
+                <h3 class="settings-title">设置</h3>
+                <div class="settings-item">
+                    <label for="settings-text-speed">文字显示速度</label>
+                    <input type="range" id="settings-text-speed" min="10" max="150" value="50" step="5">
+                    <span class="settings-value" id="settings-speed-label">50ms</span>
+                </div>
+                <div class="settings-item">
+                    <label for="settings-bgm-volume">BGM音量</label>
+                    <input type="range" id="settings-bgm-volume" min="0" max="100" value="80" step="5">
+                    <span class="settings-value" id="settings-bgm-label">80%</span>
+                </div>
+                <div class="settings-item">
+                    <label for="settings-sfx-volume">音效音量</label>
+                    <input type="range" id="settings-sfx-volume" min="0" max="100" value="80" step="5">
+                    <span class="settings-value" id="settings-sfx-label">80%</span>
+                </div>
+            </div>
+            <div class="modal-buttons modal-buttons-single">
+                <button class="modal-btn btn-green" id="modal-settings-close">确认</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

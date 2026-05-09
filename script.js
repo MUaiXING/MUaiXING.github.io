@@ -1,666 +1,698 @@
-// =============================================
-// script.js - 撒旦不入天堂
-// 互动小说 / Galgame 游戏逻辑
-// =============================================
-
 // ==================== 场景数据 ====================
-// ★ 照葫芦画瓢：在这里添加/修改你的故事场景 ★
-// 每个场景的字段说明：
-//   background : 背景图路径，格式 /images/xxxx
-//   speaker    : 说话者名字，显示在对话框左上角
-//   text       : 对话文本内容
-//   choices    : (可选) 选项数组，每个选项有 text(按钮文字) 和 nextId(目标场景ID)
-//   nextId     : (可选) 如果没有choices，自动跳转到此场景ID
-//   若既无choices也无nextId，则为结局场景
-const scenes = {
-    // ---- 示例场景 ----
-    'prologue': {
-        background: '/images/bg_hell_border.jpg',
+// 这是您的故事数据模板，请照葫芦画瓢来编写自己的故事
+// type: 'dialogue' | 'choice' | 'narration' | 'end'
+// speaker: 说话人（dialogue和choice类型使用，narration和end不需要）
+// text: 对话内容或全屏文字
+// background: 场景背景图路径，格式 /images/xxxx
+// nextId: 下一个场景的id（dialogue和narration类型使用）
+// choices: 选项数组（仅choice类型使用），每个选项包含 text 和 nextId
+// end类型：显示结局文字后返回标题界面，清除进度
+
+const SCENES = [
+    // ===== 示例场景0：普通对话 =====
+    {
+        id: 0,
+        type: 'dialogue',
+        background: '/images/scene-church.jpg',
         speaker: '旁白',
-        text: '天堂与地狱的边界，雾气弥漫。撒旦站在灰色地带，凝视着远方那扇散发着柔和光芒的大门。他已经很久没有来到这里了。',
+        text: '天堂之门紧闭，钟声在虚空中回荡。撒旦站在云层之上，望向那遥不可及的光。',
+        nextId: 1
+    },
+    // ===== 示例场景1：全屏叙述（无对话框） =====
+    {
+        id: 1,
+        type: 'narration',
+        background: '/images/scene-sky.jpg',
+        text: '千百年来，他从未想过要踏入那片圣地。\n但今天，一切都将改变。',
+        nextId: 2
+    },
+    // ===== 示例场景2：选择分支 =====
+    {
+        id: 2,
+        type: 'choice',
+        background: '/images/scene-gate.jpg',
+        speaker: '撒旦',
+        text: '我该怎么做？',
         choices: [
-            { text: '迈步走向天堂之门', nextId: 'approach_gate' },
-            { text: '驻足观望，犹豫不决', nextId: 'hesitate' },
-            { text: '转身，返回地狱深处', nextId: 'return_hell' }
+            { text: '叩响天堂之门', nextId: 3 },
+            { text: '转身离开，回到地狱', nextId: 5 }
         ]
     },
-    'approach_gate': {
-        background: '/images/bg_heaven_gate.jpg',
+    // ===== 示例场景3：分支A - 对话 =====
+    {
+        id: 3,
+        type: 'dialogue',
+        background: '/images/scene-gate-knock.jpg',
+        speaker: '天使长',
+        text: '谁在外面？这里不欢迎你。',
+        nextId: 4
+    },
+    // ===== 示例场景4：分支A - 结局 =====
+    {
+        id: 4,
+        type: 'end',
+        background: '/images/scene-ending-a.jpg',
+        text: '天堂之门始终没有为他打开。\n但撒旦第一次感受到，那扇门后传来的微光，似乎不再那么遥远。\n\n——结局A：叩门者',
+        nextId: null
+    },
+    // ===== 示例场景5：分支B - 对话 =====
+    {
+        id: 5,
+        type: 'dialogue',
+        background: '/images/scene-hell.jpg',
         speaker: '撒旦',
-        text: '光芒越来越亮，那扇门近在咫尺。他感受不到任何灼烧——这本应是地狱之主最畏惧的东西。',
-        nextId: 'gatekeeper_appears'
+        text: '也许那里本就不属于我。地狱才是我的归宿。',
+        nextId: 6
     },
-    'gatekeeper_appears': {
-        background: '/images/bg_heaven_gate.jpg',
-        speaker: '守门天使',
-        text: '停下脚步，堕落者。天堂不欢迎你。你早已做出了选择。',
-        choices: [
-            { text: '「我来此并非寻求宽恕。」', nextId: 'explain_purpose' },
-            { text: '沉默不语，继续向前', nextId: 'force_entry' }
-        ]
+    // ===== 示例场景6：分支B - 全屏叙述 =====
+    {
+        id: 6,
+        type: 'narration',
+        background: '/images/scene-hell-throne.jpg',
+        text: '他回到那熟悉的王座，火焰依旧在四周燃烧。\n只是这一次，他看向上方的目光中，多了一丝难以言说的情绪。',
+        nextId: 7
     },
-    'hesitate': {
-        background: '/images/bg_gray_wasteland.jpg',
-        speaker: '撒旦',
-        text: '他停在这片灰色地带，寒风从地狱的方向吹来，也夹杂着天堂飘来的暖意。两种力量在他体内拉扯。',
-        nextId: 'inner_voice'
-    },
-    'inner_voice': {
-        background: '/images/bg_gray_wasteland.jpg',
-        speaker: '内心的声音',
-        text: '你究竟想要什么？是复仇？是和解？还是……只是想看看那扇门后面是否还留着你曾经的位置？',
-        choices: [
-            { text: '「我不知道。」', nextId: 'admit_uncertainty' },
-            { text: '「我只是想亲眼看看。」', nextId: 'curiosity' }
-        ]
-    },
-    'return_hell': {
-        background: '/images/bg_hell_throne.jpg',
-        speaker: '旁白',
-        text: '撒旦转身，回到了属于他的王座。火焰在四周燃烧，臣民们跪拜在地。他闭上眼，那扇门的影像却依旧挥之不去。',
-        nextId: 'hell_ending'
-    },
-    'hell_ending': {
-        background: '/images/bg_hell_throne.jpg',
-        speaker: '旁白',
-        text: '他选择了熟悉的黑暗。但心中的疑问，或许永远不会有答案。\n\n—— 结局：王座之上 ——',
-        // 无 choices 也无 nextId → 结局
-    },
-    'explain_purpose': {
-        background: '/images/bg_heaven_gate.jpg',
-        speaker: '撒旦',
-        text: '「我来此并非寻求宽恕。我只想知道……当年的决定，是否真的不可逆转。」',
-        nextId: 'angel_response'
-    },
-    'angel_response': {
-        background: '/images/bg_heaven_gate.jpg',
-        speaker: '守门天使',
-        text: '天使沉默了片刻，眼中流露出一丝复杂的情绪。「每一个灵魂都有回头的可能……但你，撒旦，你是所有堕落者的象征。你进入天堂，意味着秩序的崩塌。」',
-        choices: [
-            { text: '「那就让秩序崩塌好了。」', nextId: 'rebellion_ending' },
-            { text: '「我明白了。」转身离开', nextId: 'understanding_ending' }
-        ]
-    },
-    'force_entry': {
-        background: '/images/bg_heaven_gate_bright.jpg',
-        speaker: '旁白',
-        text: '撒旦没有回答，他的沉默本身便是回答。光芒大盛，一股力量将他推了回去。天堂之门，确实对他紧闭着。',
-        nextId: 'rejected_ending'
-    },
-    'rejected_ending': {
-        background: '/images/bg_gray_wasteland.jpg',
-        speaker: '旁白',
-        text: '他仰面倒在灰色地带，天空既不是天堂的金色也不是地狱的暗红。他笑了，笑声在空旷的原野上回荡。\n\n—— 结局：永恒的边界 ——',
-    },
-    'admit_uncertainty': {
-        background: '/images/bg_gray_wasteland.jpg',
-        speaker: '撒旦',
-        text: '「我不知道。」他轻声承认。这或许是几千年来，他第一次对自己诚实。',
-        nextId: 'dawn_arrives'
-    },
-    'curiosity': {
-        background: '/images/bg_gray_wasteland.jpg',
-        speaker: '撒旦',
-        text: '「我只是想亲眼看看。」他的声音平静，「看看那个我曾经属于的地方，如今变成了什么模样。」',
-        nextId: 'dawn_arrives'
-    },
-    'dawn_arrives': {
-        background: '/images/bg_dawn.jpg',
-        speaker: '旁白',
-        text: '灰色地带的天际，第一次出现了黎明的曙光。那不是天堂的光，也不是地狱的火——那是属于撒旦自己的光。\n\n—— 结局：黎明 ——',
-    },
-    'rebellion_ending': {
-        background: '/images/bg_heaven_gate_bright.jpg',
-        speaker: '旁白',
-        text: '撒旦的羽翼展开，黑暗与光明交织。他不再是堕落者，也不再是天使——他成为了崭新的存在。\n\n—— 结局：新生 ——',
-    },
-    'understanding_ending': {
-        background: '/images/bg_gray_wasteland.jpg',
-        speaker: '旁白',
-        text: '他理解了。有些门关上了便不会再开，但这不代表前方没有路。撒旦转身，走向了那条属于他自己的道路。\n\n—— 结局：领悟 ——',
+    // ===== 示例场景7：分支B - 结局 =====
+    {
+        id: 7,
+        type: 'end',
+        background: '/images/scene-ending-b.jpg',
+        text: '撒旦依然是地狱之主。\n但那一天在天堂门前的徘徊，成为了他永恒的秘密。\n\n——结局B：归位者',
+        nextId: null
     }
-};
-
-// 初始场景ID（"开始"按钮从这里开始）
-const INITIAL_SCENE_ID = 'prologue';
-
-// localStorage 键名
-const STORAGE_KEY_SAVED = 'satanGame_savedSceneId';
-const STORAGE_KEY_SETTINGS = 'satanGame_settings';
+];
 
 // ==================== 游戏状态 ====================
-let currentSceneId = null; // 当前场景ID
-let savedSceneId = null; // 已保存的场景ID（从localStorage读取）
-let isTextAnimating = false; // 是否正在逐字显示
-let textAnimationTimer = null; // 逐字显示定时器
-let fullText = ''; // 当前场景完整文本
-let displayedTextLength = 0; // 已显示的字符数
-let textSpeed = 35; // 文字速度（毫秒/字符），默认中等
-let menuOpen = false; // 右上角菜单是否打开
-let currentChoices = null; // 当前场景的选项
+const STORAGE_KEY_PROGRESS = 'satan_heaven_game_progress';
+const STORAGE_KEY_SETTINGS = 'satan_heaven_game_settings';
 
-// ==================== DOM 元素引用 ====================
-const titleScreen = document.getElementById('title-screen');
-const gameScreen = document.getElementById('game-screen');
-const gameBg = document.getElementById('game-bg');
-const speakerTag = document.getElementById('speaker-tag');
-const dialogText = document.getElementById('dialog-text');
-const choicesContainer = document.getElementById('choices-container');
-const continueHint = document.getElementById('continue-hint');
-const dialogClickArea = document.getElementById('dialog-click-area');
-const dialogBox = document.getElementById('dialog-box');
+const gameState = {
+    currentSceneId: 0,
+    lastSavedSceneId: null, // 上次保存的场景ID，用于判断是否需要提示保存
+    isTyping: false, // 是否正在逐字显示
+    typingTimer: null,
+    typingIndex: 0,
+    fullText: '',
+    currentScene: null,
+    choiceVisible: false,
+    narrationVisible: false,
+    isTransitioning: false, // 防止快速点击
+};
 
-const btnStart = document.getElementById('btn-start');
-const btnRestart = document.getElementById('btn-restart');
-const btnSettingsTitle = document.getElementById('btn-settings-title');
-const btnMenuToggle = document.getElementById('btn-menu-toggle');
-const menuDropdown = document.getElementById('menu-dropdown');
-const btnSave = document.getElementById('btn-save');
-const btnExit = document.getElementById('btn-exit');
+// ==================== 设置 ====================
+const defaultSettings = {
+    textSpeed: 50, // 逐字显示速度（ms/字符）
+    bgmVolume: 80,
+    sfxVolume: 80,
+};
 
-const modalRestart = document.getElementById('modal-restart');
-const modalSave = document.getElementById('modal-save');
-const modalExit = document.getElementById('modal-exit');
-const modalSettings = document.getElementById('modal-settings');
+let settings = { ...defaultSettings };
 
-const btnRestartYes = document.getElementById('btn-restart-yes');
-const btnRestartNo = document.getElementById('btn-restart-no');
-const btnSaveYes = document.getElementById('btn-save-yes');
-const btnSaveNo = document.getElementById('btn-save-no');
-const btnExitSave = document.getElementById('btn-exit-save');
-const btnExitNosave = document.getElementById('btn-exit-nosave');
-const btnExitClose = document.getElementById('btn-exit-close');
-const btnSettingsClose = document.getElementById('btn-settings-close');
+// ==================== DOM元素缓存 ====================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
 
-const rangeTextSpeed = document.getElementById('range-text-speed');
-const rangeBgm = document.getElementById('range-bgm');
-const rangeSfx = document.getElementById('range-sfx');
+// 标题界面
+const titleScreen = $('#title-screen');
+const titleButtons = $('#title-buttons');
 
-// ==================== 初始化 ====================
-function init() {
-    loadSettings();
-    loadSavedProgress();
-    updateTitleButtons();
-    showScreen('title');
-    bindEvents();
-    // 初始化设置面板的控件值
-    rangeTextSpeed.value = Math.round(6 - (textSpeed / 15)); // 映射速度到1-5
-    rangeBgm.value = 70;
-    rangeSfx.value = 80;
+// 游戏界面
+const gameScreen = $('#game-screen');
+const sceneBgImg = $('#scene-bg-img');
+const sceneBackground = $('#scene-background');
+const narrationOverlay = $('#narration-overlay');
+const narrationText = $('#narration-text');
+const dialogueBox = $('#dialogue-box');
+const dialogueSpeaker = $('#dialogue-speaker');
+const dialogueText = $('#dialogue-text');
+const dialogueChoices = $('#dialogue-choices');
+const dialogueHint = $('#dialogue-hint');
+const gameMenuBtn = $('#game-menu-btn');
+const gameDropdown = $('#game-dropdown');
+const dropdownBackdrop = $('#dropdown-backdrop');
+
+// 模态弹窗
+const modalRestartOverlay = $('#modal-restart-overlay');
+const modalSaveOverlay = $('#modal-save-overlay');
+const modalExitOverlay = $('#modal-exit-overlay');
+const modalSettingsOverlay = $('#modal-settings-overlay');
+
+// 设置元素
+const settingsTextSpeed = $('#settings-text-speed');
+const settingsBgmVolume = $('#settings-bgm-volume');
+const settingsSfxVolume = $('#settings-sfx-volume');
+const settingsSpeedLabel = $('#settings-speed-label');
+const settingsBgmLabel = $('#settings-bgm-label');
+const settingsSfxLabel = $('#settings-sfx-label');
+
+// ==================== 工具函数 ====================
+function hasProgress() {
+    return localStorage.getItem(STORAGE_KEY_PROGRESS) !== null;
+}
+
+function getSavedProgress() {
+    try {
+        const data = localStorage.getItem(STORAGE_KEY_PROGRESS);
+        return data ? JSON.parse(data) : null;
+    } catch {
+        return null;
+    }
+}
+
+function saveProgressToStorage(sceneId) {
+    const data = { sceneId: sceneId, timestamp: Date.now() };
+    localStorage.setItem(STORAGE_KEY_PROGRESS, JSON.stringify(data));
+    gameState.lastSavedSceneId = sceneId;
+}
+
+function deleteProgressFromStorage() {
+    localStorage.removeItem(STORAGE_KEY_PROGRESS);
+    gameState.lastSavedSceneId = null;
 }
 
 function loadSettings() {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
-        if (raw) {
-            const settings = JSON.parse(raw);
-            textSpeed = settings.textSpeed || 35;
+        const data = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        if (data) {
+            settings = { ...defaultSettings, ...JSON.parse(data) };
         }
-    } catch (e) {
-        textSpeed = 35;
+    } catch {
+        settings = { ...defaultSettings };
     }
 }
 
-function saveSettingsToStorage() {
-    const settings = {
-        textSpeed: textSpeed,
-        bgmVolume: parseInt(rangeBgm.value) || 70,
-        sfxVolume: parseInt(rangeSfx.value) || 80
-    };
-    try {
-        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
-    } catch (e) {
-        // localStorage 不可用
-    }
+function saveSettings() {
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
 }
 
-function loadSavedProgress() {
-    try {
-        const saved = localStorage.getItem(STORAGE_KEY_SAVED);
-        savedSceneId = saved ? saved : null;
-    } catch (e) {
-        savedSceneId = null;
-    }
+function isProgressDirty() {
+    return gameState.lastSavedSceneId !== null && gameState.currentSceneId !== gameState.lastSavedSceneId;
 }
 
-function updateTitleButtons() {
-    if (savedSceneId && scenes[savedSceneId]) {
-        // 有已保存的进度
-        btnStart.textContent = '继续故事';
-        btnStart.classList.add('has-progress');
-        btnRestart.style.display = 'block';
+// ==================== 标题界面 ====================
+function renderTitleButtons() {
+    const hasProg = hasProgress();
+    let html = '';
+
+    if (hasProg) {
+        html += '<button class="title-btn title-btn-start" id="btn-continue">继续故事</button>';
+        html += '<button class="title-btn title-btn-restart" id="btn-restart">重新开始</button>';
     } else {
-        btnStart.textContent = '开始';
-        btnStart.classList.remove('has-progress');
-        btnRestart.style.display = 'none';
+        html += '<button class="title-btn title-btn-start" id="btn-start">开始</button>';
     }
+    html += '<button class="title-btn title-btn-settings" id="btn-settings-title">设置</button>';
+
+    titleButtons.innerHTML = html;
+
+    // 绑定事件
+    if (hasProg) {
+        $('#btn-continue')?.addEventListener('click', onContinueStory);
+        $('#btn-restart')?.addEventListener('click', onRestartClick);
+    } else {
+        $('#btn-start')?.addEventListener('click', onStartGame);
+    }
+    $('#btn-settings-title')?.addEventListener('click', openSettingsModal);
 }
 
-function showScreen(screenName) {
-    titleScreen.classList.remove('active');
+function showTitleScreen() {
+    // 确保游戏界面内容不可见
     gameScreen.classList.remove('active');
-    if (screenName === 'title') {
-        titleScreen.classList.add('active');
-        closeAllModals();
-        closeMenu();
-    } else if (screenName === 'game') {
-        gameScreen.classList.add('active');
-        closeAllModals();
-        closeMenu();
-    }
-}
-
-// ==================== 事件绑定 ====================
-function bindEvents() {
-    // 标题界面按钮
-    btnStart.addEventListener('click', onStartOrContinue);
-    btnRestart.addEventListener('click', onRestartClick);
-    btnSettingsTitle.addEventListener('click', () => openModal(modalSettings));
-
-    // 右上角菜单
-    btnMenuToggle.addEventListener('click', toggleMenu);
-    document.addEventListener('click', onDocumentClick);
-
-    // 菜单选项
-    btnSave.addEventListener('click', () => {
-        closeMenu();
-        openModal(modalSave);
-    });
-    btnExit.addEventListener('click', () => {
-        closeMenu();
-        onExitClick();
-    });
-
-    // 弹窗按钮
-    btnRestartYes.addEventListener('click', onRestartConfirm);
-    btnRestartNo.addEventListener('click', () => closeModal(modalRestart));
-    btnSaveYes.addEventListener('click', onSaveConfirm);
-    btnSaveNo.addEventListener('click', () => closeModal(modalSave));
-    btnExitSave.addEventListener('click', onExitSaveConfirm);
-    btnExitNosave.addEventListener('click', onExitNosaveConfirm);
-    btnExitClose.addEventListener('click', () => closeModal(modalExit));
-    btnSettingsClose.addEventListener('click', () => {
-        applySettingsFromPanel();
-        closeModal(modalSettings);
-    });
-
-    // 对话框点击（继续/跳过动画）
-    dialogClickArea.addEventListener('click', onDialogClick);
-
-    // 键盘事件
-    document.addEventListener('keydown', onKeyDown);
-
-    // 设置面板实时预览
-    rangeTextSpeed.addEventListener('input', () => {
-        // 实时更新文字速度（但不保存）
-        const val = parseInt(rangeTextSpeed.value);
-        textSpeed = Math.round((6 - val) * 15);
-        if (textSpeed < 5) textSpeed = 5;
-    });
-}
-
-function onDocumentClick(e) {
-    // 点击右上角菜单外部时关闭菜单
-    if (menuOpen) {
-        const wrapper = document.getElementById('game-menu-wrapper');
-        if (wrapper && !wrapper.contains(e.target)) {
-            closeMenu();
-        }
-    }
-}
-
-// ==================== 菜单 ====================
-function toggleMenu() {
-    if (menuOpen) {
-        closeMenu();
-    } else {
-        openMenu();
-    }
-}
-
-function openMenu() {
-    menuDropdown.style.display = 'block';
-    menuOpen = true;
-}
-
-function closeMenu() {
-    menuDropdown.style.display = 'none';
-    menuOpen = false;
-}
-
-// ==================== 弹窗系统 ====================
-function openModal(modalEl) {
+    narrationOverlay.classList.remove('active');
+    dialogueBox.classList.remove('active');
+    dialogueChoices.classList.remove('active');
+    gameDropdown.classList.remove('open');
+    dropdownBackdrop.classList.remove('active');
     closeAllModals();
-    modalEl.style.display = 'flex';
+
+    titleScreen.classList.add('active');
+    renderTitleButtons();
 }
 
-function closeModal(modalEl) {
-    modalEl.style.display = 'none';
+function showGameScreen() {
+    titleScreen.classList.remove('active');
+    gameScreen.classList.add('active');
 }
 
-function closeAllModals() {
-    modalRestart.style.display = 'none';
-    modalSave.style.display = 'none';
-    modalExit.style.display = 'none';
-    modalSettings.style.display = 'none';
+// ==================== 场景加载与渲染 ====================
+function findScene(id) {
+    return SCENES.find(s => s.id === id) || null;
 }
 
-function isAnyModalOpen() {
-    return modalRestart.style.display === 'flex' ||
-        modalSave.style.display === 'flex' ||
-        modalExit.style.display === 'flex' ||
-        modalSettings.style.display === 'flex';
-}
-
-// ==================== 游戏逻辑 ====================
-function onStartOrContinue() {
-    if (savedSceneId && scenes[savedSceneId]) {
-        // 继续故事
-        loadScene(savedSceneId);
-    } else {
-        // 新游戏
-        loadScene(INITIAL_SCENE_ID);
-        // 清除旧存档（如果有的话，确保干净开始）
-        // 注意：不清除savedSceneId，直到玩家主动保存
-    }
-    showScreen('game');
-}
-
-function onRestartClick() {
-    openModal(modalRestart);
-}
-
-function onRestartConfirm() {
-    // 删除进度
-    try {
-        localStorage.removeItem(STORAGE_KEY_SAVED);
-    } catch (e) { }
-    savedSceneId = null;
-    currentSceneId = null;
-    updateTitleButtons();
-    closeModal(modalRestart);
-    // 保持在标题界面
-}
-
-function onSaveConfirm() {
-    // 保存当前进度
-    if (currentSceneId && scenes[currentSceneId]) {
-        savedSceneId = currentSceneId;
-        try {
-            localStorage.setItem(STORAGE_KEY_SAVED, currentSceneId);
-        } catch (e) { }
-        updateTitleButtons();
-    }
-    closeModal(modalSave);
-    // 可以给一个短暂的视觉反馈（可选）
-    flashSaveIndicator();
-}
-
-function flashSaveIndicator() {
-    // 简单的保存成功提示：短暂改变对话框边框颜色
-    const origBorder = dialogBox.style.borderTopColor;
-    dialogBox.style.borderTopColor = '#4CAF50';
-    dialogBox.style.transition = 'border-top-color 0.3s';
-    setTimeout(() => {
-        dialogBox.style.borderTopColor = origBorder || '';
-        setTimeout(() => {
-            dialogBox.style.transition = '';
-        }, 400);
-    }, 600);
-}
-
-function onExitClick() {
-    // 检查是否有未保存的进度
-    if (currentSceneId && currentSceneId !== savedSceneId) {
-        // 有未保存的进度
-        openModal(modalExit);
-    } else {
-        // 没有未保存的进度，直接返回标题
-        returnToTitle();
-    }
-}
-
-function onExitSaveConfirm() {
-    // 保存并退出
-    if (currentSceneId && scenes[currentSceneId]) {
-        savedSceneId = currentSceneId;
-        try {
-            localStorage.setItem(STORAGE_KEY_SAVED, currentSceneId);
-        } catch (e) { }
-        updateTitleButtons();
-    }
-    closeModal(modalExit);
-    returnToTitle();
-}
-
-function onExitNosaveConfirm() {
-    // 不保存并退出
-    closeModal(modalExit);
-    returnToTitle();
-}
-
-function returnToTitle() {
-    stopTextAnimation();
-    currentChoices = null;
-    showScreen('title');
-    updateTitleButtons();
-}
-
-// ==================== 场景加载与显示 ====================
 function loadScene(sceneId) {
-    const scene = scenes[sceneId];
+    if (gameState.isTransitioning) return;
+    gameState.isTransitioning = true;
+
+    const scene = findScene(sceneId);
     if (!scene) {
-        console.error('场景不存在:', sceneId);
+        // 场景不存在，返回标题
+        returnToTitle();
         return;
     }
 
-    stopTextAnimation();
-    currentSceneId = sceneId;
-    currentChoices = scene.choices || null;
+    gameState.currentSceneId = sceneId;
+    gameState.currentScene = scene;
+    gameState.choiceVisible = false;
+    gameState.narrationVisible = false;
+    gameState.isTyping = false;
+    if (gameState.typingTimer) clearTimeout(gameState.typingTimer);
+    gameState.typingTimer = null;
+    gameState.typingIndex = 0;
+    gameState.fullText = '';
 
-    // 更新背景
-    gameBg.style.backgroundImage = `url('${scene.background}')`;
-
-    // 更新说话者
-    speakerTag.textContent = scene.speaker || '???';
-
-    // 清除选项
-    choicesContainer.innerHTML = '';
-    dialogClickArea.classList.remove('has-choices');
-
-    // 显示文本（逐字动画）
-    fullText = scene.text || '';
-    displayedTextLength = 0;
-    dialogText.textContent = '';
-    continueHint.classList.add('hidden');
-
-    if (currentChoices) {
-        // 有选项时，先显示文本，文本显示完后出现选项
-        startTextAnimation(() => {
-            showChoices(currentChoices);
-            dialogClickArea.classList.add('has-choices');
-            continueHint.classList.add('hidden');
-        });
-    } else if (scene.nextId) {
-        // 有下一场景，文本显示完后显示继续提示
-        startTextAnimation(() => {
-            continueHint.classList.remove('hidden');
-            dialogClickArea.classList.remove('has-choices');
-        });
-    } else {
-        // 结局场景，文本显示完后显示"返回标题"提示
-        startTextAnimation(() => {
-            continueHint.classList.remove('hidden');
-            continueHint.textContent = '▼ 点击返回标题';
-            dialogClickArea.classList.remove('has-choices');
-        });
-    }
-}
-
-function startTextAnimation(onComplete) {
-    stopTextAnimation();
-    isTextAnimating = true;
-    displayedTextLength = 0;
-    dialogText.textContent = '';
-
-    if (textSpeed <= 5 || fullText.length === 0) {
-        // 速度极快或空文本，直接显示全部
-        dialogText.textContent = fullText;
-        displayedTextLength = fullText.length;
-        isTextAnimating = false;
-        if (onComplete) onComplete();
-        return;
-    }
-
-    const charsPerTick = 1;
-    let index = 0;
-
-    function tick() {
-        index += charsPerTick;
-        if (index >= fullText.length) {
-            dialogText.textContent = fullText;
-            displayedTextLength = fullText.length;
-            isTextAnimating = false;
-            textAnimationTimer = null;
-            if (onComplete) onComplete();
-            return;
+    // 切换背景
+    changeBackground(scene.background, () => {
+        // 根据场景类型渲染
+        switch (scene.type) {
+            case 'dialogue':
+                renderDialogue(scene);
+                break;
+            case 'choice':
+                renderDialogue(scene); // choice先显示对话，选项在文字完成后出现
+                break;
+            case 'narration':
+                renderNarration(scene);
+                break;
+            case 'end':
+                renderNarration(scene); // end类似narration，但点击后返回标题
+                break;
+            default:
+                renderDialogue(scene);
         }
-        displayedTextLength = index;
-        dialogText.textContent = fullText.substring(0, index);
-        textAnimationTimer = setTimeout(tick, textSpeed);
-    }
-
-    textAnimationTimer = setTimeout(tick, textSpeed);
+        gameState.isTransitioning = false;
+    });
 }
 
-function stopTextAnimation() {
-    if (textAnimationTimer) {
-        clearTimeout(textAnimationTimer);
-        textAnimationTimer = null;
-    }
-    isTextAnimating = false;
+function changeBackground(newSrc, callback) {
+    // 淡出
+    sceneBackground.style.opacity = '0.5';
+    setTimeout(() => {
+        sceneBgImg.src = newSrc || '';
+        // 等待图片加载
+        const img = new Image();
+        img.onload = () => {
+            sceneBackground.style.opacity = '1';
+            if (callback) setTimeout(callback, 200);
+        };
+        img.onerror = () => {
+            sceneBackground.style.opacity = '1';
+            if (callback) setTimeout(callback, 200);
+        };
+        img.src = newSrc || '';
+        // 兜底：如果加载太慢
+        setTimeout(() => {
+            if (sceneBackground.style.opacity === '0.5') {
+                sceneBackground.style.opacity = '1';
+                if (callback) callback();
+            }
+        }, 1200);
+    }, 250);
 }
 
-function skipTextAnimation() {
-    if (isTextAnimating) {
-        stopTextAnimation();
-        dialogText.textContent = fullText;
-        displayedTextLength = fullText.length;
-        // 触发完成回调
-        onTextAnimationComplete();
-    }
+// ==================== 对话渲染 ====================
+function renderDialogue(scene) {
+    // 隐藏全屏文字
+    narrationOverlay.classList.remove('active');
+    narrationText.classList.remove('visible');
+    gameState.narrationVisible = false;
+
+    // 显示对话框
+    dialogueBox.classList.add('active');
+    dialogueChoices.classList.remove('active');
+    dialogueSpeaker.textContent = scene.speaker || '';
+    dialogueText.textContent = '';
+    dialogueHint.style.opacity = '0.7';
+    gameState.choiceVisible = false;
+
+    // 逐字显示
+    gameState.fullText = scene.text || '';
+    gameState.typingIndex = 0;
+    gameState.isTyping = true;
+    if (gameState.typingTimer) clearTimeout(gameState.typingTimer);
+    typeNextChar();
 }
 
-function onTextAnimationComplete() {
-    const scene = scenes[currentSceneId];
-    if (!scene) return;
-
-    if (currentChoices && choicesContainer.children.length === 0) {
-        // 显示选项
-        showChoices(currentChoices);
-        dialogClickArea.classList.add('has-choices');
-        continueHint.classList.add('hidden');
-    } else if (scene.nextId) {
-        continueHint.classList.remove('hidden');
-        continueHint.textContent = '▼ 点击继续';
-        dialogClickArea.classList.remove('has-choices');
-    } else if (!currentChoices) {
-        // 结局
-        continueHint.classList.remove('hidden');
-        continueHint.textContent = '▼ 点击返回标题';
-        dialogClickArea.classList.remove('has-choices');
+function typeNextChar() {
+    if (!gameState.isTyping) return;
+    if (gameState.typingIndex >= gameState.fullText.length) {
+        // 文字显示完毕
+        gameState.isTyping = false;
+        gameState.typingTimer = null;
+        dialogueText.textContent = gameState.fullText;
+        // 如果是choice类型，显示选项
+        if (gameState.currentScene && gameState.currentScene.type === 'choice') {
+            showChoices(gameState.currentScene);
+        }
+        return;
     }
+    dialogueText.textContent = gameState.fullText.substring(0, gameState.typingIndex + 1);
+    gameState.typingIndex++;
+    gameState.typingTimer = setTimeout(typeNextChar, settings.textSpeed);
 }
 
-function showChoices(choices) {
-    choicesContainer.innerHTML = '';
-    choices.forEach(choice => {
+function skipTyping() {
+    if (gameState.isTyping) {
+        // 立即完成文字显示
+        gameState.isTyping = false;
+        if (gameState.typingTimer) clearTimeout(gameState.typingTimer);
+        gameState.typingTimer = null;
+        gameState.typingIndex = gameState.fullText.length;
+        dialogueText.textContent = gameState.fullText;
+        // 如果是choice类型，显示选项
+        if (gameState.currentScene && gameState.currentScene.type === 'choice') {
+            showChoices(gameState.currentScene);
+        }
+        return true; // 表示跳过了逐字显示
+    }
+    return false; // 文字已显示完毕
+}
+
+function showChoices(scene) {
+    if (!scene.choices || scene.choices.length === 0) return;
+    dialogueChoices.innerHTML = '';
+    scene.choices.forEach((choice) => {
         const btn = document.createElement('button');
         btn.className = 'choice-btn';
         btn.textContent = choice.text;
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (choice.nextId && scenes[choice.nextId]) {
-                currentChoices = null;
-                choicesContainer.innerHTML = '';
-                continueHint.classList.add('hidden');
-                dialogClickArea.classList.remove('has-choices');
-                loadScene(choice.nextId);
-            }
+            if (gameState.isTransitioning) return;
+            loadScene(choice.nextId);
         });
-        choicesContainer.appendChild(btn);
+        dialogueChoices.appendChild(btn);
+    });
+    dialogueChoices.classList.add('active');
+    dialogueBox.classList.add('has-choices');
+    dialogueHint.style.opacity = '0';
+    gameState.choiceVisible = true;
+}
+
+// ==================== 全屏叙述渲染 ====================
+function renderNarration(scene) {
+    // 隐藏对话框
+    dialogueBox.classList.remove('active');
+    dialogueChoices.classList.remove('active');
+    dialogueBox.classList.remove('has-choices');
+    dialogueHint.style.opacity = '0';
+    gameState.choiceVisible = false;
+    gameState.isTyping = false;
+    if (gameState.typingTimer) clearTimeout(gameState.typingTimer);
+    gameState.typingTimer = null;
+
+    // 显示全屏文字层
+    narrationText.textContent = scene.text || '';
+    narrationText.classList.remove('visible');
+    narrationOverlay.classList.add('active');
+    gameState.narrationVisible = true;
+
+    // 触发渐显动画
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            narrationText.classList.add('visible');
+        });
     });
 }
 
-function onDialogClick() {
-    if (isAnyModalOpen()) return;
+// ==================== 对话框点击处理 ====================
+dialogueBox.addEventListener('click', (e) => {
+    // 如果点击的是选项按钮，不处理
+    if (e.target.classList.contains('choice-btn')) return;
+    if (gameState.isTransitioning) return;
+    if (!dialogueBox.classList.contains('active')) return;
 
-    if (isTextAnimating) {
-        // 跳过动画
-        skipTextAnimation();
+    // 如果选项可见，不处理（需要点击选项）
+    if (gameState.choiceVisible) return;
+
+    // 如果正在逐字显示，跳过
+    if (gameState.isTyping) {
+        skipTyping();
         return;
     }
 
-    // 文本已完全显示
-    const scene = scenes[currentSceneId];
+    // 文字已显示完毕，推进场景
+    const scene = gameState.currentScene;
+    if (scene && (scene.type === 'dialogue')) {
+        if (scene.nextId !== null && scene.nextId !== undefined) {
+            loadScene(scene.nextId);
+        } else {
+            returnToTitle();
+        }
+    }
+});
+
+// ==================== 全屏文字点击处理 ====================
+narrationOverlay.addEventListener('click', () => {
+    if (gameState.isTransitioning) return;
+    if (!gameState.narrationVisible) return;
+
+    const scene = gameState.currentScene;
     if (!scene) return;
 
-    if (currentChoices) {
-        // 有选项时，点击对话框不做跳转（需要点击具体选项）
-        return;
+    if (scene.type === 'end') {
+        // 结局：清除进度并返回标题
+        deleteProgressFromStorage();
+        returnToTitle();
+    } else if (scene.type === 'narration') {
+        if (scene.nextId !== null && scene.nextId !== undefined) {
+            loadScene(scene.nextId);
+        } else {
+            returnToTitle();
+        }
     }
+});
 
-    if (scene.nextId && scenes[scene.nextId]) {
-        // 进入下一场景
-        continueHint.classList.add('hidden');
-        loadScene(scene.nextId);
-    } else if (!scene.nextId && !currentChoices) {
-        // 结局，返回标题
+// ==================== 右上角菜单 ====================
+gameMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = gameDropdown.classList.contains('open');
+    if (isOpen) {
+        closeDropdown();
+    } else {
+        openDropdown();
+    }
+});
+
+dropdownBackdrop.addEventListener('click', () => {
+    closeDropdown();
+});
+
+function openDropdown() {
+    gameDropdown.classList.add('open');
+    dropdownBackdrop.classList.add('active');
+}
+
+function closeDropdown() {
+    gameDropdown.classList.remove('open');
+    dropdownBackdrop.classList.remove('active');
+}
+
+// 保存进度选项
+$('#dropdown-save').addEventListener('click', () => {
+    closeDropdown();
+    openSaveModal();
+});
+
+// 退出选项
+$('#dropdown-exit').addEventListener('click', () => {
+    closeDropdown();
+    if (isProgressDirty()) {
+        openExitModal();
+    } else {
+        // 进度已保存，直接退出
         returnToTitle();
     }
+});
+
+// ==================== 模态弹窗管理 ====================
+function closeAllModals() {
+    modalRestartOverlay.classList.remove('active');
+    modalSaveOverlay.classList.remove('active');
+    modalExitOverlay.classList.remove('active');
+    modalSettingsOverlay.classList.remove('active');
 }
 
-function onKeyDown(e) {
-    if (isAnyModalOpen()) {
-        // 弹窗打开时，按Escape关闭最上层弹窗
-        if (e.key === 'Escape') {
-            if (modalExit.style.display === 'flex') closeModal(modalExit);
-            else if (modalSave.style.display === 'flex') closeModal(modalSave);
-            else if (modalRestart.style.display === 'flex') closeModal(modalRestart);
-            else if (modalSettings.style.display === 'flex') {
-                applySettingsFromPanel();
-                closeModal(modalSettings);
-            }
-        }
-        return;
+// --- 重新开始弹窗 ---
+function onRestartClick() {
+    closeAllModals();
+    modalRestartOverlay.classList.add('active');
+}
+
+$('#modal-restart-no').addEventListener('click', () => {
+    modalRestartOverlay.classList.remove('active');
+});
+
+$('#modal-restart-yes').addEventListener('click', () => {
+    deleteProgressFromStorage();
+    modalRestartOverlay.classList.remove('active');
+    renderTitleButtons();
+});
+
+// --- 保存弹窗 ---
+function openSaveModal() {
+    closeAllModals();
+    modalSaveOverlay.classList.add('active');
+}
+
+$('#modal-save-no').addEventListener('click', () => {
+    modalSaveOverlay.classList.remove('active');
+});
+
+$('#modal-save-yes').addEventListener('click', () => {
+    saveProgressToStorage(gameState.currentSceneId);
+    modalSaveOverlay.classList.remove('active');
+});
+
+// --- 退出弹窗（含X按钮） ---
+function openExitModal() {
+    closeAllModals();
+    modalExitOverlay.classList.add('active');
+}
+
+$('#modal-exit-x').addEventListener('click', () => {
+    modalExitOverlay.classList.remove('active');
+});
+
+$('#modal-exit-nosave').addEventListener('click', () => {
+    modalExitOverlay.classList.remove('active');
+    returnToTitle();
+});
+
+$('#modal-exit-save').addEventListener('click', () => {
+    saveProgressToStorage(gameState.currentSceneId);
+    modalExitOverlay.classList.remove('active');
+    returnToTitle();
+});
+
+// --- 设置弹窗 ---
+function openSettingsModal() {
+    closeAllModals();
+    // 同步设置值到UI
+    settingsTextSpeed.value = settings.textSpeed;
+    settingsBgmVolume.value = settings.bgmVolume;
+    settingsSfxVolume.value = settings.sfxVolume;
+    settingsSpeedLabel.textContent = settings.textSpeed + 'ms';
+    settingsBgmLabel.textContent = settings.bgmVolume + '%';
+    settingsSfxLabel.textContent = settings.sfxVolume + '%';
+    modalSettingsOverlay.classList.add('active');
+}
+
+$('#modal-settings-x').addEventListener('click', () => {
+    // 关闭时不保存设置变更（用户需要点确认按钮）
+    modalSettingsOverlay.classList.remove('active');
+});
+
+$('#modal-settings-close').addEventListener('click', () => {
+    // 保存设置
+    settings.textSpeed = parseInt(settingsTextSpeed.value);
+    settings.bgmVolume = parseInt(settingsBgmVolume.value);
+    settings.sfxVolume = parseInt(settingsSfxVolume.value);
+    saveSettings();
+    modalSettingsOverlay.classList.remove('active');
+});
+
+// 设置滑块实时更新标签
+settingsTextSpeed.addEventListener('input', () => {
+    settingsSpeedLabel.textContent = settingsTextSpeed.value + 'ms';
+});
+settingsBgmVolume.addEventListener('input', () => {
+    settingsBgmLabel.textContent = settingsBgmVolume.value + '%';
+});
+settingsSfxVolume.addEventListener('input', () => {
+    settingsSfxLabel.textContent = settingsSfxVolume.value + '%';
+});
+
+// ==================== 标题界面按钮事件 ====================
+function onStartGame() {
+    gameState.currentSceneId = 0;
+    gameState.lastSavedSceneId = null;
+    showGameScreen();
+    loadScene(0);
+}
+
+function onContinueStory() {
+    const progress = getSavedProgress();
+    if (progress && progress.sceneId !== undefined) {
+        gameState.currentSceneId = progress.sceneId;
+        gameState.lastSavedSceneId = progress.sceneId;
+        showGameScreen();
+        loadScene(progress.sceneId);
+    } else {
+        // 进度数据损坏，回退
+        deleteProgressFromStorage();
+        renderTitleButtons();
+        onStartGame();
     }
+}
 
-    if (gameScreen.classList.contains('active')) {
-        if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            onDialogClick();
+// ==================== 返回标题界面 ====================
+function returnToTitle() {
+    gameState.isTransitioning = false;
+    gameState.isTyping = false;
+    if (gameState.typingTimer) clearTimeout(gameState.typingTimer);
+    gameState.typingTimer = null;
+    gameState.choiceVisible = false;
+    gameState.narrationVisible = false;
+
+    narrationOverlay.classList.remove('active');
+    narrationText.classList.remove('visible');
+    dialogueBox.classList.remove('active');
+    dialogueChoices.classList.remove('active');
+    dialogueBox.classList.remove('has-choices');
+    closeDropdown();
+    closeAllModals();
+
+    showTitleScreen();
+}
+
+// ==================== 键盘快捷键（桌面端） ====================
+document.addEventListener('keydown', (e) => {
+    // ESC关闭所有弹窗
+    if (e.key === 'Escape') {
+        if (modalRestartOverlay.classList.contains('active') ||
+            modalSaveOverlay.classList.contains('active') ||
+            modalExitOverlay.classList.contains('active') ||
+            modalSettingsOverlay.classList.contains('active')) {
+            closeAllModals();
+            return;
         }
-        if (e.key === 'Escape') {
-            // 在游戏中按Esc打开退出流程
-            onExitClick();
+        if (gameDropdown.classList.contains('open')) {
+            closeDropdown();
+            return;
         }
     }
+    // 空格或回车推进对话
+    if ((e.key === ' ' || e.key === 'Enter') && gameScreen.classList.contains('active')) {
+        if (modalRestartOverlay.classList.contains('active') ||
+            modalSaveOverlay.classList.contains('active') ||
+            modalExitOverlay.classList.contains('active') ||
+            modalSettingsOverlay.classList.contains('active')) {
+            return;
+        }
+        if (gameDropdown.classList.contains('open')) return;
+        if (gameState.narrationVisible && narrationOverlay.classList.contains('active')) {
+            narrationOverlay.click();
+            return;
+        }
+        if (dialogueBox.classList.contains('active') && !gameState.choiceVisible) {
+            dialogueBox.click();
+            return;
+        }
+    }
+});
+
+// ==================== 初始化 ====================
+function init() {
+    loadSettings();
+    // 初始显示标题界面
+    showTitleScreen();
+    // 预加载标题背景（fallback已由CSS处理）
+    sceneBgImg.src = '';
+    sceneBackground.style.opacity = '1';
 }
 
-// ==================== 设置面板 ====================
-function applySettingsFromPanel() {
-    const val = parseInt(rangeTextSpeed.value);
-    textSpeed = Math.round((6 - val) * 15);
-    if (textSpeed < 5) textSpeed = 5;
-    saveSettingsToStorage();
-}
-
-// ==================== 启动 ====================
+// 启动
 init();
 
-console.log('✨《撒旦不入天堂》互动小说模板已就绪');
-console.log('  - 标题界面已加载');
-console.log('  - 场景数据包含 ' + Object.keys(scenes).length + ' 个场景');
-console.log('  - 已保存进度:', savedSceneId || '无');
-console.log('  - 文字速度:', textSpeed + 'ms/字符');
-console.log('  🖊️ 照葫芦画瓢：编辑 script.js 中的 scenes 对象来编写你的故事');
+console.log('《撒旦不入天堂》互动小说模板已就绪。');
+console.log('请修改 SCENES 数组来编写您的故事。');
+console.log('图片路径格式：/images/xxxx，请将实际图片放入对应目录。');
+console.log('支持场景类型：dialogue（对话）、choice（选项）、narration（全屏文字）、end（结局）。');
