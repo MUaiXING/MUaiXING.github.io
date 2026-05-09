@@ -17,4 +17,12 @@
 
   <script src="script.js"></script>
 </body>
+<script>
+function fixVH() {
+  document.getElementById("game").style.height = window.innerHeight + "px";
+}
+window.addEventListener("resize", fixVH);
+window.addEventListener("orientationchange", fixVH);
+fixVH();
+</script>
 </html>
