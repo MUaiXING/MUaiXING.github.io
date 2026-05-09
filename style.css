@@ -1,3 +1,124 @@
+/* =======================
+   主菜单样式（新增）
+======================= */
+#main-menu {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+#main-menu.hidden {
+  display: none;
+}
+
+#menu-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#menu-title {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+}
+
+#menu-buttons {
+  position: absolute;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 70%;
+}
+
+#menu-buttons button {
+  padding: 14px;
+  font-size: 20px;
+  border-radius: 8px;
+}
+
+/* =======================
+   右上角游戏内菜单（新增）
+======================= */
+#ingame-menu-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 26px;
+  padding: 5px 10px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#ingame-menu {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  background: rgba(0,0,0,0.7);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#ingame-menu.hidden {
+  display: none;
+}
+
+/* =======================
+   弹窗（新增）
+======================= */
+#popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#popup.hidden {
+  display: none;
+}
+
+#popup-box {
+  background: #222;
+  padding: 20px;
+  border-radius: 12px;
+  width: 80%;
+  position: relative;
+}
+
+#popup-text {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+#popup-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+#popup-left { background: #d33; padding: 10px 20px; }
+#popup-right { background: #3d3; padding: 10px 20px; }
+
+#popup-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+}
+
+/* 隐藏按钮 */
+.hidden { display: none; }
+
 body {
   margin: 0;
   padding: 0;
