@@ -1,253 +1,717 @@
-/* =======================
-   全局变量与基础重置
-======================= */
+/* =============================================
+   style.css - 撒旦不入天堂
+   互动小说 / Galgame 风格样式
+   ============================================= */
+
+/* ---------- CSS 变量 ---------- */
 :root {
-  --text-bg: rgba(0, 0, 0, 0.75);
-  --accent-color: #ffffff;
-  --btn-green: #2ecc71;
-  --btn-red: #e74c3c;
-  --safe-area-bottom: env(safe-area-inset-bottom);
+    --dialog-height: 28vh;
+    --dialog-height-mobile: 34vh;
+    --speaker-tag-height: 2rem;
+    --color-bg: #0a0a0a;
+    --color-dialog-bg: rgba(10, 10, 20, 0.92);
+    --color-dialog-border: rgba(255, 255, 255, 0.25);
+    --color-text: #f0f0f0;
+    --color-speaker: #ffcc80;
+    --color-choice-bg: rgba(255, 255, 255, 0.08);
+    --color-choice-hover: rgba(255, 255, 255, 0.2);
+    --color-choice-border: rgba(255, 255, 255, 0.4);
+    --color-green: #4CAF50;
+    --color-green-hover: #43A047;
+    --color-red: #e53935;
+    --color-red-hover: #c62828;
+    --color-modal-bg: rgba(20, 20, 30, 0.96);
+    --color-overlay: rgba(0, 0, 0, 0.7);
+    --font-main: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+    --font-serif: 'Noto Serif SC', 'STSong', 'SimSun', serif;
+    --transition-speed: 0.3s;
+    --border-radius: 10px;
+    --border-radius-sm: 6px;
 }
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮蓝框 */
+/* ---------- 全局重置 ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font-main);
+    background: var(--color-bg);
+    color: var(--color-text);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Microsoft Yahei", sans-serif;
-  background: #000;
-  color: #fff;
-  overflow: hidden;
-  touch-action: manipulation; /* 禁止双击缩放，提升点击响应速度 */
-  width: 100%;
-  height: 100%;
+    position: relative;
 }
 
-/* =======================
-   主菜单样式
-======================= */
-#main-menu {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 1000;
+/* ---------- 屏幕容器 ---------- */
+.screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    z-index: 1;
+}
+.screen.active {
+    display: block;
 }
 
-#menu-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -1;
+/* ========== 标题界面 ========== */
+#title-screen {
+    z-index: 10;
+}
+.title-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/images/title_background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* 如果背景图不存在，显示备用渐变色 */
+    background-color: #1a1a2e;
+}
+.title-bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+}
+.title-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem;
+}
+.title-logo {
+    max-width: 70%;
+    max-height: 30vh;
+    object-fit: contain;
+    margin-bottom: 3rem;
+    filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.6));
+    animation: titleFloat 3s ease-in-out infinite;
+}
+.title-text-fallback {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 5vw, 4rem);
+    color: #f0e6d3;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+    margin-bottom: 3rem;
+    letter-spacing: 0.2em;
+    animation: titleFloat 3s ease-in-out infinite;
+}
+@keyframes titleFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+.title-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    width: 100%;
+    max-width: 280px;
+}
+.title-btn {
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    font-size: 1.1rem;
+    font-family: var(--font-main);
+    letter-spacing: 0.08em;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: all var(--transition-speed) ease;
+    text-align: center;
+}
+.title-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+.title-btn:active {
+    transform: scale(0.97);
+    transition: transform 0.1s;
+}
+.btn-start {
+    font-size: 1.2rem;
+    padding: 0.95rem 1.5rem;
+    border-color: rgba(255, 200, 120, 0.6);
+    background: rgba(255, 180, 80, 0.15);
+}
+.btn-start:hover {
+    border-color: rgba(255, 200, 120, 0.9);
+    background: rgba(255, 180, 80, 0.25);
+}
+.btn-restart {
+    border-color: rgba(255, 100, 100, 0.5);
+    background: rgba(200, 60, 60, 0.2);
+    font-size: 0.95rem;
+}
+.btn-restart:hover {
+    border-color: rgba(255, 100, 100, 0.8);
+    background: rgba(200, 60, 60, 0.35);
+}
+.btn-settings {
+    font-size: 0.95rem;
 }
 
-#menu-title {
-  margin-top: 15vh;
-  width: 80%;
-  max-width: 400px;
-  filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+/* ========== 游戏界面 ========== */
+#game-screen {
+    z-index: 5;
+}
+.game-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #1a1a2e;
+    transition: background-image 0.6s ease;
 }
 
-#menu-buttons {
-  margin-top: auto;
-  margin-bottom: calc(10vh + var(--safe-area-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 75%;
-  max-width: 300px;
+/* 右上角菜单 */
+.game-menu-wrapper {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 20;
+}
+.btn-menu-toggle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition: all var(--transition-speed) ease;
+    padding: 0;
+}
+.btn-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+.btn-menu-toggle:active {
+    transform: scale(0.9);
+}
+.menu-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    min-width: 150px;
+    background: rgba(20, 20, 30, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    animation: dropdownIn 0.2s ease;
+}
+@keyframes dropdownIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.menu-option {
+    display: block;
+    width: 100%;
+    padding: 0.8rem 1.2rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: var(--font-main);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.menu-option:last-child {
+    border-bottom: none;
+}
+.menu-option:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+.menu-option:active {
+    background: rgba(255, 255, 255, 0.22);
 }
 
-#menu-buttons button {
-  padding: 16px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+/* 对话框 */
+.dialog-box {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--dialog-height);
+    background: var(--color-dialog-bg);
+    border-top: 2px solid var(--color-dialog-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1rem 1.5rem 1.2rem 1.5rem;
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    transition: height 0.35s ease;
 }
-
-#menu-buttons button:active {
-  transform: scale(0.95);
-  background: rgba(255, 255, 255, 0.3);
+.speaker-tag {
+    position: absolute;
+    top: -1.1rem;
+    left: 1.8rem;
+    background: var(--color-dialog-bg);
+    border: 1px solid var(--color-dialog-border);
+    border-bottom: none;
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+    padding: 0.3rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-speaker);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    max-width: 70%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
-
-/* =======================
-   游戏界面与角色
-======================= */
-#game {
-  width: 100vw;
-  height: 100vh;
-  position: relative;
-  background-size: cover;
-  background-position: center;
+.dialog-text {
+    flex: 1;
+    font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+    line-height: 1.7;
+    color: var(--color-text);
+    overflow-y: auto;
+    padding-top: 0.3rem;
+    letter-spacing: 0.03em;
 }
-
-#character {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  max-height: 80vh;
-  max-width: 100vw;
-  pointer-events: none;
-  object-fit: contain;
+.choices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+    padding-top: 0.4rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
 }
-
-/* =======================
-   对话框与选项 (移动端核心)
-======================= */
-#textbox {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
-  padding: 20px 20px calc(20px + var(--safe-area-bottom));
-  z-index: 99;
-}
-
-#text {
-  font-size: 17px;
-  line-height: 1.6;
-  min-height: 4.8em; /* 约三行字的高度 */
-  margin-bottom: 10px;
-  overflow-y: auto;
-}
-
 .choice-btn {
-  width: 100%;
-  margin: 8px 0;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #fff;
-  border-radius: 8px;
-  font-size: 16px;
-  text-align: left; /* 移动端左对齐更符合阅读习惯 */
+    display: block;
+    width: 100%;
+    padding: 0.7rem 1rem;
+    font-size: 0.95rem;
+    font-family: var(--font-main);
+    letter-spacing: 0.04em;
+    background: var(--color-choice-bg);
+    color: #fff;
+    border: 1px solid var(--color-choice-border);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
 }
-
+.choice-btn:hover {
+    background: var(--color-choice-hover);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-1px);
+}
 .choice-btn:active {
-  background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.28);
+    transform: scale(0.98);
+}
+.continue-hint {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 1.5rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    animation: hintBlink 1.6s ease-in-out infinite;
+    pointer-events: none;
+    letter-spacing: 0.05em;
+}
+.continue-hint.hidden {
+    display: none;
+}
+@keyframes hintBlink {
+    0%,
+    100% {
+        opacity: 0.35;
+    }
+    50% {
+        opacity: 0.9;
+    }
 }
 
-/* =======================
-   右上角菜单
-======================= */
-#ingame-menu-btn {
-  position: absolute;
-  top: max(10px, env(safe-area-inset-top));
-  right: 15px;
-  width: 44px; /* 触控热区建议不小于 44px */
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  border-radius: 50%;
-  font-size: 20px;
-  z-index: 100;
+/* 对话框点击区域 */
+.dialog-click-area {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--dialog-height);
+    z-index: 16;
+    cursor: pointer;
+    /* 当有选项时，点击区域缩小，让选项可被点击 */
+}
+.dialog-click-area.has-choices {
+    height: 40%;
+    pointer-events: none;
 }
 
-#ingame-menu {
-  position: absolute;
-  top: max(60px, env(safe-area-inset-top));
-  right: 15px;
-  background: rgba(25, 25, 25, 0.95);
-  border: 1px solid #444;
-  border-radius: 12px;
-  padding: 8px;
-  z-index: 101;
-  min-width: 120px;
+/* ========== 弹窗通用 ========== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    background: var(--color-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.25s ease;
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+.modal-box {
+    background: var(--color-modal-bg);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: var(--border-radius);
+    padding: 2rem 1.8rem 1.5rem 1.8rem;
+    max-width: 420px;
+    width: 85%;
+    text-align: center;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    position: relative;
+    animation: modalIn 0.3s ease;
+}
+@keyframes modalIn {
+    from {
+        transform: translateY(20px) scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+.modal-message {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: #e0e0e0;
+    letter-spacing: 0.04em;
+}
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.modal-btn {
+    padding: 0.7rem 1.6rem;
+    font-size: 1rem;
+    font-family: var(--font-main);
+    letter-spacing: 0.05em;
+    border: 2px solid transparent;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 90px;
+    color: #fff;
+}
+.modal-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.modal-btn:active {
+    transform: scale(0.95);
+}
+.btn-green {
+    background: var(--color-green);
+    border-color: var(--color-green);
+}
+.btn-green:hover {
+    background: var(--color-green-hover);
+    border-color: var(--color-green-hover);
+}
+.btn-red {
+    background: var(--color-red);
+    border-color: var(--color-red);
+}
+.btn-red:hover {
+    background: var(--color-red-hover);
+    border-color: var(--color-red-hover);
+}
+.modal-close-x {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    line-height: 1;
+    padding: 0;
+}
+.modal-close-x:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.7);
 }
 
-#ingame-menu button {
-  width: 100%;
-  padding: 12px;
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 16px;
-  border-bottom: 1px solid #333;
+/* 设置弹窗 */
+.modal-box-settings {
+    text-align: left;
+    padding: 2rem 1.8rem 1.8rem 1.8rem;
+}
+.settings-title {
+    text-align: center;
+    font-size: 1.3rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.5rem;
+    color: #ffcc80;
+}
+.settings-item {
+    margin-bottom: 1.3rem;
+}
+.settings-item label {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+    color: #ccc;
+    letter-spacing: 0.04em;
+}
+.settings-item input[type="range"] {
+    width: 100%;
+    accent-color: #ffcc80;
+    cursor: pointer;
+}
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: #888;
+    margin-top: 0.2rem;
 }
 
-#ingame-menu button:last-child { border-bottom: none; }
-
-/* =======================
-   弹窗优化
-======================= */
-#popup {
-  position: fixed;
-  inset: 0;
-  z-index: 99999 !important; 
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
-  pointer-events: auto !important;
+/* ========== 响应式适配 ========== */
+@media (max-width: 768px) {
+    .dialog-box {
+        height: var(--dialog-height-mobile);
+        padding: 0.8rem 1rem 1rem 1rem;
+    }
+    .dialog-text {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    .speaker-tag {
+        top: -0.9rem;
+        left: 1.2rem;
+        font-size: 0.8rem;
+        padding: 0.25rem 0.8rem;
+    }
+    .choice-btn {
+        padding: 0.65rem 0.8rem;
+        font-size: 0.88rem;
+    }
+    .dialog-click-area {
+        height: var(--dialog-height-mobile);
+    }
+    .title-logo {
+        max-width: 80%;
+        max-height: 22vh;
+    }
+    .title-btn {
+        padding: 0.75rem 1.2rem;
+        font-size: 1rem;
+    }
+    .btn-start {
+        font-size: 1.05rem;
+        padding: 0.8rem 1.2rem;
+    }
+    .modal-box {
+        width: 90%;
+        padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+    }
+    .modal-message {
+        font-size: 0.95rem;
+    }
+    .modal-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+        min-width: 70px;
+    }
+    .game-menu-wrapper {
+        top: 10px;
+        right: 10px;
+    }
+    .btn-menu-toggle {
+        width: 38px;
+        height: 38px;
+    }
+    .menu-dropdown {
+        top: 44px;
+        right: 0;
+        min-width: 130px;
+    }
+    .menu-option {
+        padding: 0.7rem 1rem;
+        font-size: 0.88rem;
+    }
 }
 
-#popup-box {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  padding: 30px 20px 20px;
-  border-radius: 16px;
-  width: 100%;
-  max-width: 320px;
-  text-align: center;
-  position: relative;
-  z-index: 100000 !important;
-  pointer-events: auto !important;
+@media (max-width: 400px) {
+    .dialog-box {
+        height: 38vh;
+        padding: 0.7rem 0.8rem 0.8rem 0.8rem;
+    }
+    .dialog-text {
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+    .dialog-click-area {
+        height: 38vh;
+    }
+    .speaker-tag {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.6rem;
+        left: 0.8rem;
+        top: -0.75rem;
+    }
+    .title-logo {
+        max-width: 85%;
+        max-height: 18vh;
+    }
+    .title-buttons {
+        max-width: 240px;
+        gap: 0.7rem;
+    }
+    .title-btn {
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+    }
+    .btn-start {
+        font-size: 0.95rem;
+        padding: 0.7rem 1rem;
+    }
 }
 
-#popup-text {
-  font-size: 17px;
-  line-height: 1.5;
-  margin-bottom: 25px;
-  color: #eee;
+/* 平板和大屏优化 */
+@media (min-width: 1200px) {
+    .dialog-box {
+        height: 25vh;
+        padding: 1.2rem 2.5rem 1.4rem 2.5rem;
+    }
+    .dialog-text {
+        font-size: 1.2rem;
+    }
+    .dialog-click-area {
+        height: 25vh;
+    }
+    .speaker-tag {
+        left: 2.8rem;
+        font-size: 0.95rem;
+    }
+    .title-logo {
+        max-width: 50%;
+        max-height: 35vh;
+    }
+    .modal-box {
+        max-width: 480px;
+    }
 }
 
-#popup-buttons {
-  display: flex;
-  gap: 12px;
-}
-
-#popup-buttons button {
-  flex: 1;
-  padding: 14px;
-  border-radius: 10px;
-  border: none;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.btn-green { background-color: var(--btn-green) !important; color: white !important; }
-.btn-red { background-color: var(--btn-red) !important; color: white !important; }
-
-#popup-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 10px;
-  font-size: 20px;
-  color: #888;
-}
-
-/* =======================
-   通用状态控制
-======================= */
-.hidden {
-  display: none !important;
+/* 横屏手机适配 */
+@media (max-height: 500px) and (orientation: landscape) {
+    .dialog-box {
+        height: 38vh;
+        padding: 0.5rem 1rem 0.6rem 1rem;
+    }
+    .dialog-text {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+    .dialog-click-area {
+        height: 38vh;
+    }
+    .speaker-tag {
+        top: -0.7rem;
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+    }
+    .title-content {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        justify-content: center;
+    }
+    .title-logo {
+        max-height: 25vh;
+        max-width: 45%;
+        margin-bottom: 0;
+    }
+    .title-buttons {
+        max-width: 200px;
+        gap: 0.5rem;
+    }
 }

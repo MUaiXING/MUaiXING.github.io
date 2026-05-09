@@ -2,73 +2,113 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>撒旦不入天堂</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* 简单的内联样式确保隐藏逻辑生效 */
-        .hidden { display: none !important; }
-        #main-menu { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; position: relative; }
-        #menu-bg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:-1; object-fit: cover; }
-        #popup { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 100; display: flex; align-items: center; justify-content: center; }
-        #popup-box { background: #222; padding: 20px; border: 1px solid #555; position: relative; text-align: center; color: white; }
-        .btn-green { background-color: #28a745; color: white; }
-        .btn-red { background-color: #dc3545; color: white; }
-        #game { width: 100%; background-size: cover; background-position: center; position: relative; }
-    </style>
 </head>
 <body>
-
-<!-- 主菜单 -->
-<div id="main-menu">
-    <img id="menu-bg" src="images/menu_background.jpg" alt="背景">
-    <img id="menu-title" src="images/game_logo.png" alt="标题图">
-
-    <div id="menu-buttons">
-        <button id="btn-start">开始</button>
-        <button id="btn-restart" class="hidden">重新开始</button>
-        <button id="btn-settings">设置</button>
-    </div>
-</div>
-
-<!-- 游戏界面 -->
-<div id="game" class="hidden">
-    <img id="character" src="" alt="角色图片">
-    <div id="textbox">
-        <div id="text"></div>
-        <div id="choices"></div>
-    </div>
-
-    <!-- 右上角菜单按钮 -->
-    <div id="ingame-menu-btn" onclick="toggleInGameMenu()">☰</div>
-
-    <!-- 右上角下拉选项 -->
-    <div id="ingame-menu" class="hidden">
-        <button id="btn-save-progress">保存进度</button>
-        <button id="btn-exit-game">退出</button>
-    </div>
-</div>
-
-<!-- 通用弹窗系统 -->
-<div id="popup" class="hidden">
-    <div id="popup-box">
-        <div id="popup-close" class="hidden" style="position:absolute; right:10px; top:10px; cursor:pointer;">✖</div>
-        <div id="popup-text">内容</div>
-        <div id="popup-buttons" style="margin-top: 20px;">
-            <button id="popup-left">左按钮</button>
-            <button id="popup-right">右按钮</button>
+    <!-- ========== 标题界面 ========== -->
+    <div id="title-screen" class="screen active">
+        <div class="title-bg"></div>
+        <div class="title-content">
+            <img src="/images/title_logo.png" alt="撒旦不入天堂" class="title-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+            <h1 class="title-text-fallback" style="display:none;">撒旦不入天堂</h1>
+            <div class="title-buttons">
+                <button id="btn-restart" class="title-btn btn-restart" style="display:none;">重新开始</button>
+                <button id="btn-settings-title" class="title-btn btn-settings">设置</button>
+                <button id="btn-start" class="title-btn btn-start">开始</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="script.js"></script>
-<script>
-    // 修正手机高度
-    function fixVH(){
-        document.getElementById("game").style.height = window.innerHeight + "px";
-    }
-    window.addEventListener("resize", fixVH);
-    fixVH();
-</script>
+    <!-- ========== 游戏界面 ========== -->
+    <div id="game-screen" class="screen">
+        <div class="game-bg" id="game-bg"></div>
+        <!-- 右上角菜单 -->
+        <div class="game-menu-wrapper" id="game-menu-wrapper">
+            <button id="btn-menu-toggle" class="btn-menu-toggle" aria-label="菜单">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="white">
+                    <circle cx="12" cy="5" r="2"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="12" cy="19" r="2"/>
+                </svg>
+            </button>
+            <div id="menu-dropdown" class="menu-dropdown" style="display:none;">
+                <button id="btn-save" class="menu-option">保存进度</button>
+                <button id="btn-exit" class="menu-option">退出</button>
+            </div>
+        </div>
+        <!-- 对话框 -->
+        <div class="dialog-box" id="dialog-box">
+            <div class="speaker-tag" id="speaker-tag">旁白</div>
+            <div class="dialog-text" id="dialog-text"></div>
+            <div class="choices-container" id="choices-container"></div>
+            <div class="continue-hint" id="continue-hint">▼ 点击继续</div>
+        </div>
+        <!-- 点击继续的透明覆盖层（对话框上方） -->
+        <div class="dialog-click-area" id="dialog-click-area"></div>
+    </div>
+
+    <!-- ========== 弹窗：重新开始确认 ========== -->
+    <div id="modal-restart" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <p class="modal-message">是否删除当前进度？<br>这个操作是无法反悔的，请慎重考虑。</p>
+            <div class="modal-buttons">
+                <button id="btn-restart-no" class="modal-btn btn-green">否</button>
+                <button id="btn-restart-yes" class="modal-btn btn-red">是</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 弹窗：保存进度 ========== -->
+    <div id="modal-save" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <p class="modal-message">保存当前进度？</p>
+            <div class="modal-buttons">
+                <button id="btn-save-no" class="modal-btn btn-red">否</button>
+                <button id="btn-save-yes" class="modal-btn btn-green">是</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 弹窗：退出确认（未保存时） ========== -->
+    <div id="modal-exit" class="modal-overlay" style="display:none;">
+        <div class="modal-box modal-box-exit">
+            <button id="btn-exit-close" class="modal-close-x" aria-label="关闭">✕</button>
+            <p class="modal-message">保存当前进度？</p>
+            <div class="modal-buttons">
+                <button id="btn-exit-nosave" class="modal-btn btn-red">不保存并退出</button>
+                <button id="btn-exit-save" class="modal-btn btn-green">保存并退出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 弹窗：设置 ========== -->
+    <div id="modal-settings" class="modal-overlay" style="display:none;">
+        <div class="modal-box modal-box-settings">
+            <button id="btn-settings-close" class="modal-close-x" aria-label="关闭">✕</button>
+            <h3 class="settings-title">设置</h3>
+            <div class="settings-item">
+                <label for="range-text-speed">文字速度</label>
+                <input type="range" id="range-text-speed" min="1" max="5" value="3" step="1">
+                <span class="range-labels"><span>快</span><span>慢</span></span>
+            </div>
+            <div class="settings-item">
+                <label for="range-bgm">背景音乐音量</label>
+                <input type="range" id="range-bgm" min="0" max="100" value="70">
+                <span class="range-labels"><span>0</span><span>100</span></span>
+            </div>
+            <div class="settings-item">
+                <label for="range-sfx">音效音量</label>
+                <input type="range" id="range-sfx" min="0" max="100" value="80">
+                <span class="range-labels"><span>0</span><span>100</span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 通用遮罩（用于某些场景） ========== -->
+    <div id="global-overlay" class="global-overlay" style="display:none;"></div>
+
+    <script src="script.js"></script>
 </body>
 </html>
