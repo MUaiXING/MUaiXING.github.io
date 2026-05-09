@@ -155,19 +155,30 @@ document.getElementById("btn-exit-game").onclick = () => {
 function showPopup(text, mode) {
     popup.classList.remove("hidden");
     popupText.textContent = text;
-    btnClose.classList.add("hidden");
     
-    // 清除之前的颜色类
-    btnLeft.className = "";
-    btnRight.className = "";
+    // 【修复】加上安全检查：只有在找到关闭按钮时才操作它，防止报错卡死
+    if (btnClose) {
+        btnClose.classList.add("hidden");
+    }
+    
+    // 【修复】安全地移除颜色类，而不是粗暴地清空整个 className
+    btnLeft.classList.remove("btn-green", "btn-red");
+    btnRight.classList.remove("btn-green", "btn-red");
+
+    // 清空旧的点击事件，防止重复绑定
+    btnLeft.onclick = null;
+    btnRight.onclick = null;
 
     if (mode === "restart") {
+        // 要求：左边绿色按钮“否”，右边红色按钮“是”
         btnLeft.textContent = "否";
         btnLeft.classList.add("btn-green");
         btnRight.textContent = "是";
         btnRight.classList.add("btn-red");
         
-        btnLeft.onclick = () => popup.classList.add("hidden");
+        btnLeft.onclick = () => {
+            popup.classList.add("hidden");
+        };
         btnRight.onclick = () => {
             clearProgress();
             updateMenuButtons();
@@ -175,12 +186,15 @@ function showPopup(text, mode) {
         };
     } 
     else if (mode === "save") {
+        // 保存：左边红色按钮“否”，右边绿色按钮“是”
         btnLeft.textContent = "否";
         btnLeft.classList.add("btn-red");
         btnRight.textContent = "是";
         btnRight.classList.add("btn-green");
 
-        btnLeft.onclick = () => popup.classList.add("hidden");
+        btnLeft.onclick = () => {
+            popup.classList.add("hidden");
+        };
         btnRight.onclick = () => {
             saveProgress(currentScene);
             popup.classList.add("hidden");
@@ -188,13 +202,17 @@ function showPopup(text, mode) {
         };
     } 
     else if (mode === "exit_check") {
-        btnClose.classList.remove("hidden"); // 显示右上角X
+        // 退出：带右上角 X 按钮
+        if (btnClose) {
+            btnClose.classList.remove("hidden"); // 显示右上角X
+            btnClose.onclick = () => popup.classList.add("hidden");
+        }
+        
         btnLeft.textContent = "不保存并退出";
         btnLeft.classList.add("btn-red");
         btnRight.textContent = "保存并退出";
         btnRight.classList.add("btn-green");
 
-        btnClose.onclick = () => popup.classList.add("hidden");
         btnLeft.onclick = () => location.reload();
         btnRight.onclick = () => {
             saveProgress(currentScene);

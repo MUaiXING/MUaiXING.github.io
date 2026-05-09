@@ -229,8 +229,8 @@ body {
   font-weight: bold;
 }
 
-#popup-left { background: var(--btn-red); color: white; }
-#popup-right { background: var(--btn-green); color: white; }
+.btn-green { background-color: var(--btn-green) !important; color: white !important; }
+.btn-red { background-color: var(--btn-red) !important; color: white !important; }
 
 #popup-close {
   position: absolute;
