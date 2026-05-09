@@ -189,12 +189,14 @@ body {
 #popup {
   position: fixed;
   inset: 0;
+  z-index: 99999 !important; 
   background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
   padding: 20px;
+  pointer-events: auto !important;
 }
 
 #popup-box {
@@ -206,6 +208,8 @@ body {
   max-width: 320px;
   text-align: center;
   position: relative;
+  z-index: 100000 !important;
+  pointer-events: auto !important;
 }
 
 #popup-text {

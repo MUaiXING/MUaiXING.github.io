@@ -150,76 +150,88 @@ document.getElementById("btn-exit-game").onclick = () => {
 };
 
 // =====================
-// 弹窗逻辑中心
+// 弹窗逻辑中心 (直接替换版)
 // =====================
 function showPopup(text, mode) {
+    // 1. 获取背景元素，弹窗弹出时禁用它们的点击
+    const menuEl = document.getElementById("main-menu");
+    const gameEl = document.getElementById("game");
+    if (menuEl) menuEl.style.pointerEvents = "none";
+    if (gameEl) gameEl.style.pointerEvents = "none";
+
+    // 2. 显示弹窗并设置文本
     popup.classList.remove("hidden");
     popupText.textContent = text;
     
-    // 【修复】加上安全检查：只有在找到关闭按钮时才操作它，防止报错卡死
+    // 3. 定义一个内部函数，专门负责“彻底关闭弹窗”
+    const closePopup = () => {
+        popup.classList.add("hidden");
+        // 关闭弹窗时，必须恢复背景的点击功能
+        if (menuEl) menuEl.style.pointerEvents = "auto";
+        if (gameEl) gameEl.style.pointerEvents = "auto";
+    };
+
+    // 4. 重置按钮状态
     if (btnClose) {
         btnClose.classList.add("hidden");
+        btnClose.onclick = closePopup; // 默认给 X 绑定关闭
     }
-    
-    // 【修复】安全地移除颜色类，而不是粗暴地清空整个 className
     btnLeft.classList.remove("btn-green", "btn-red");
     btnRight.classList.remove("btn-green", "btn-red");
-
-    // 清空旧的点击事件，防止重复绑定
     btnLeft.onclick = null;
     btnRight.onclick = null;
 
+    // 5. 根据模式判断按钮逻辑
     if (mode === "restart") {
-        // 要求：左边绿色按钮“否”，右边红色按钮“是”
+        // 【重新开始】模式：左绿“否”，右红“是”
         btnLeft.textContent = "否";
         btnLeft.classList.add("btn-green");
         btnRight.textContent = "是";
         btnRight.classList.add("btn-red");
         
-        btnLeft.onclick = () => {
-            popup.classList.add("hidden");
-        };
+        btnLeft.onclick = closePopup; // 点否，关闭弹窗
         btnRight.onclick = () => {
             clearProgress();
             updateMenuButtons();
-            popup.classList.add("hidden");
+            closePopup(); // 执行完删除逻辑，关闭弹窗
         };
     } 
     else if (mode === "save") {
-        // 保存：左边红色按钮“否”，右边绿色按钮“是”
+        // 【保存进度】模式：左红“否”，右绿“是”
         btnLeft.textContent = "否";
         btnLeft.classList.add("btn-red");
         btnRight.textContent = "是";
         btnRight.classList.add("btn-green");
 
-        btnLeft.onclick = () => {
-            popup.classList.add("hidden");
-        };
+        btnLeft.onclick = closePopup;
         btnRight.onclick = () => {
             saveProgress(currentScene);
-            popup.classList.add("hidden");
+            closePopup();
             alert("进度已保存");
         };
     } 
     else if (mode === "exit_check") {
-        // 退出：带右上角 X 按钮
+        // 【退出询问】模式：显示右上角 X
         if (btnClose) {
-            btnClose.classList.remove("hidden"); // 显示右上角X
-            btnClose.onclick = () => popup.classList.add("hidden");
+            btnClose.classList.remove("hidden");
         }
-        
         btnLeft.textContent = "不保存并退出";
         btnLeft.classList.add("btn-red");
         btnRight.textContent = "保存并退出";
         btnRight.classList.add("btn-green");
 
-        btnLeft.onclick = () => location.reload();
+        btnLeft.onclick = () => {
+            closePopup();
+            location.reload(); // 刷新页面回到标题
+        };
         btnRight.onclick = () => {
             saveProgress(currentScene);
-            location.reload();
+            closePopup();
+            location.reload(); // 刷新页面回到标题
         };
     }
 }
+
 
 // 初始化
 updateMenuButtons();
