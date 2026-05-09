@@ -1,28 +1,74 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>邪恶力量 · 互动故事</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>撒旦不入天堂</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="game">
-    <img id="character" src="" alt="character" />
-    <div id="textbox">
-      <div id="text">加载中……</div>
-      <div id="choices"></div>
-    </div>
-  </div>
 
-  <script src="script.js"></script>
-</body>
+<!-- =======================
+      主菜单（新增）
+======================= -->
+<div id="main-menu">
+    <img id="menu-bg" src="assets/menu_bg.jpg" alt="">
+    <img id="menu-title" src="assets/title.png" alt="title">
+
+    <div id="menu-buttons">
+        <button id="btn-start">开始</button>
+        <button id="btn-continue" class="hidden">继续故事</button> <!-- ★会自动显示 -->
+        <button id="btn-restart" class="hidden">重新开始</button>
+        <button id="btn-settings">设置</button>
+    </div>
+</div>
+
+<!-- =======================
+      游戏界面（你的原内容）
+======================= -->
+<div id="game" class="hidden">
+    <img id="character" src="" alt="character">
+    <div id="textbox">
+        <div id="text"></div>
+        <div id="choices"></div>
+    </div>
+
+    <!-- 游戏右上角菜单按钮（新增） -->
+    <div id="ingame-menu-btn">☰</div>
+
+    <!-- 右上角菜单（新增） -->
+    <div id="ingame-menu" class="hidden">
+        <button id="save-progress">保存进度</button>
+        <button id="exit-game">退出</button>
+    </div>
+</div>
+
+<!-- =======================
+      弹窗（保存/重置/退出）
+======================= -->
+<div id="popup" class="hidden">
+    <div id="popup-box">
+        <div id="popup-text">弹窗内容</div>
+
+        <div id="popup-buttons">
+            <button id="popup-left">否</button>
+            <button id="popup-right">是</button>
+        </div>
+
+        <div id="popup-close">✖</div> <!-- 仅退出时显示 -->
+    </div>
+</div>
+
+<script src="script.js"></script>
+
 <script>
-function fixVH() {
-  document.getElementById("game").style.height = window.innerHeight + "px";
+// ★ 修正手机高度（保留）
+function fixVH(){
+    document.getElementById("game").style.height = window.innerHeight + "px";
 }
 window.addEventListener("resize", fixVH);
-window.addEventListener("orientationchange", fixVH);
 fixVH();
 </script>
+
+</body>
 </html>
