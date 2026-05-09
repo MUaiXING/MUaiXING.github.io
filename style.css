@@ -4,6 +4,7 @@ body {
   font-family: "Microsoft Yahei", sans-serif;
   background: #000;
   overflow: hidden;
+  touch-action: manipulation;
 }
 
 #game {
@@ -12,6 +13,7 @@ body {
   position: relative;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
 }
 
 #character {
@@ -19,7 +21,8 @@ body {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  max-height: 80vh;
+  max-height: 75vh;
+  max-width: 90vw;
   pointer-events: none;
 }
 
@@ -29,32 +32,66 @@ body {
   width: 100%;
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  padding: 20px;
+  padding: 14px;
   box-sizing: border-box;
 }
 
 #text {
-  font-size: 18px;
-  line-height: 1.6em;
-  min-height: 60px;
+  font-size: 16px;
+  line-height: 1.5em;
+  min-height: 50px;
 }
 
 #choices {
-  margin-top: 15px;
+  margin-top: 12px;
 }
 
 .choice-btn {
   display: block;
-  margin: 8px 0;
-  padding: 10px 15px;
+  width: 100%;
+  margin: 6px 0;
+  padding: 10px 14px;
   background: rgba(255,255,255,0.1);
   border: 1px solid #aaa;
   color: #fff;
   cursor: pointer;
-  border-radius: 5px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: 15px; 
 }
 
 .choice-btn:hover {
   background: rgba(255,255,255,0.25);
+}
+
+/* ===================== */
+/* ★★★ 新增：移动端优化 ★★★ */
+/* ===================== */
+
+/* 兼容 iPhone 刘海屏与底部操作栏 */
+@supports(padding: max(0px)) {
+  #textbox {
+    padding-bottom: max(16px, env(safe-area-inset-bottom)); /* ★新增 */
+  }
+}
+
+/* 特殊小屏（宽度小于420px） */
+@media (max-width: 420px) {
+  #text {
+    font-size: 15px; /* ★新增 */
+  }
+  .choice-btn {
+    font-size: 14px; /* ★新增 */
+    padding: 10px;
+  }
+}
+
+/* 平板 / 大屏手机适配 */
+@media (min-width: 768px) {
+  #text {
+    font-size: 20px; /* ★新增：自动变大 */
+  }
+  .choice-btn {
+    font-size: 18px;
+    padding: 12px 18px;
+  }
 }
